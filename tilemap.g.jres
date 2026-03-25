@@ -22,6 +22,12 @@
         "tilemapTile": true,
         "displayName": "dark-grass"
     },
+    "tile4": {
+        "data": "hwQQABAAAAB3d3fMd3d3d3d3Z8fMfHd3d3dsx3x8d3d3Z2xnd3x3d8fMx2ZmzHd+x8ZnbGZ35n7HfHfHdsfvd2xVd2xm9u7uXFV3Zmb/7u7HfHVnd8fud2fHZ2Z3d+x+Z2bHd2fMd353Z8x3d3x3d3d3Zmd8fHd3d3dnZ8Z8d3d3d3dmd3d3dw==",
+        "mimeType": "image/x-mkcd-f4",
+        "tilemapTile": true,
+        "displayName": "tree"
+    },
     "level1": {
         "id": "level1",
         "mimeType": "application/mkcd-tilemap",
@@ -29,7 +35,7 @@
         "tileset": [
             "myTiles.transparency16",
             "sprites.castle.tileGrass2",
-            "myTiles.tile1"
+            "myTiles.tile4"
         ],
         "displayName": "blank"
     },

@@ -104,6 +104,9 @@ function bufferToChunk(buf: Buffer): number[][] {
     return chunk
 }
 
+
+
+
 function genChunksInRadius() {
     let statusbar = statusbars.create(30, 84, 0)
     statusbar.setLabel("Chunk 0/100")
@@ -114,13 +117,14 @@ function genChunksInRadius() {
     let cur = 0
     for (let i = -5; i < 5; i++) {
         for (let j = -5; j < 5; j++) {
-            getOrGenerateChunk(i, j)
+            getOrGenerateChunk(i,j)
             cur++
             statusbar.value = cur
             statusbar.setLabel(`Chunk ${cur}/100`)
             pause(0)
         }
     }
+    saveWorld()
     pause(100)
     statusbar.destroy()
 }
@@ -131,12 +135,13 @@ function entertransmitMode() {
     let waitableips = NetWorking.GetPeers()
     waitableips.then(function (ips) {
         let myMenu = miniMenu.createMenuFromArray(ips.map((a) => miniMenu.createMenuItem(a)))
-        myMenu.onButtonPressed(controller.A,function(selection,index) {
+        myMenu.onButtonPressed(controller.A, function (selection, index) {
             game.splash("Attempting Tranfer")
             try {
-                worldtransfer.sendWorld(selection,settings.readBuffer("world"))
+                worldtransfer.sendWorld(selection, settings.readBuffer("world"))
+                game.splash("Transfer Complete!")
             } catch (e) {
-                game.splash("Tranfer Failed With Error:",e)
+                game.splash("Tranfer Failed With Error:", e)
             }
         })
     })
@@ -146,23 +151,23 @@ function enterreciveMode() {
     NetWorking.init()
     let myDisplay = miniMenu.createMenu(miniMenu.createMenuItem("Finding Peers..."))
     let waitableips = NetWorking.GetPeers()
-    myDisplay.setFlag(SpriteFlag.Invisible,true)
+    myDisplay.setFlag(SpriteFlag.Invisible, true)
     waitableips.then(function (ips) {
         let myMenu = miniMenu.createMenuFromArray(ips.map((a) => miniMenu.createMenuItem(a)))
         myMenu.onButtonPressed(controller.A, function (selection, index) {
             myMenu.close()
-            myDisplay.setFlag(SpriteFlag.Invisible,false)
+            myDisplay.setFlag(SpriteFlag.Invisible, false)
             myDisplay.items[0].text = "Waiting For Transmit"
-            pause(10)
-            worldtransfer.initReceiver(selection,function(ip,data) {
+            pause(0)
+            worldtransfer.initReceiver(selection, function (ip, data) {
                 myDisplay.items[0].text = "Writing World to Storage..."
-                pause(10)
-                settings.writeBuffer("world",data)
+                pause(0)
+                settings.writeBuffer("world", data)
                 loadWorld()
                 chunkX = 0; chunkY = 0;
                 reloadMap()
                 myDisplay.items[0].text = "Process Complete."
-                pause(100)
+                pause(0)
                 myDisplay.close()
             })
         })
@@ -170,7 +175,7 @@ function enterreciveMode() {
 }
 
 controller.menu.onEvent(ControllerButtonEvent.Pressed, function () {
-    let myMenu = miniMenu.createMenuFromArray([miniMenu.createMenuItem("Gen Chunks in 10x10 radius"), miniMenu.createMenuItem("Delete World"),miniMenu.createMenuItem("Tranfer World (From Here)"),miniMenu.createMenuItem("Recive World (From Tranferer)")])
+    let myMenu = miniMenu.createMenuFromArray([miniMenu.createMenuItem("Gen Chunks in 10x10 radius"), miniMenu.createMenuItem("Delete World"), miniMenu.createMenuItem("Tranfer World (From Here)"), miniMenu.createMenuItem("Recive World (From Tranferer)")])
     controller.moveSprite(myPlayer, 0, 0)
     myMenu.onButtonPressed(controller.A, function (selection, index) {
         if (index == 0) {
@@ -180,6 +185,7 @@ controller.menu.onEvent(ControllerButtonEvent.Pressed, function () {
         if (index == 1) {
             myMenu.close()
             settings.remove("world")
+            reloadMap()
         }
         if (index == 2) {
             myMenu.close()
@@ -194,9 +200,34 @@ controller.menu.onEvent(ControllerButtonEvent.Pressed, function () {
 })
 
 // --- World storage with index table ---
-let chunks: { [key: string]: number[][] } = {}
+let chunks: { [key: string]: { data: number[][], biome: number } } = {}
 let chunksLoaded: number = 0
 let indexTable: { [key: string]: { offset: number, length: number } } = {}
+let biomeTable: { [key: string]: { biome: number } } = {}
+
+function saveBiomes() {
+    let keys = Object.keys(biomeTable)
+    let out: number[] = []
+
+    // count
+    out.push(keys.length & 0xFF)
+    out.push((keys.length >> 8) & 0xFF)
+    out.push((keys.length >> 16) & 0xFF)
+
+    // entries: x, y, biome
+    for (let k of keys) {
+        let [x, y] = k.split(":").map(n => parseInt(n))
+        let biome = biomeTable[k].biome
+
+        out.push(x & 0xFF)
+        out.push((x >> 8) & 0xFF)
+        out.push(y & 0xFF)
+        out.push((y >> 8) & 0xFF)
+        out.push(biome & 0xFF)
+    }
+
+    settings.writeBuffer("biomes", Buffer.fromArray(out))
+}
 
 function saveWorld() {
     // Step 1: Load existing world file if present
@@ -223,7 +254,7 @@ function saveWorld() {
 
     // Step 2: Merge old chunks with current chunks
     for (let k of Object.keys(chunks)) {
-        let buf = chunkToBuffer(chunks[k])
+        let buf = chunkToBuffer(chunks[k].data)
         oldChunks[k] = compressBuffer(buf)
     }
 
@@ -235,8 +266,8 @@ function saveWorld() {
     all.push((keys.length >> 16) & 0xFF)
 
     // Reserve index space (5 bytes per entry)
-    let indexSize = keys.length * 5
-    for (let i = 0; i < indexSize; i++) all.push(0)
+    let indexSize2 = keys.length * 5
+    for (let i = 0; i < indexSize2; i++) all.push(0)
 
     // Write data and fill index
     for (let idx = 0; idx < keys.length; idx++) {
@@ -262,13 +293,28 @@ function saveWorld() {
 
     // Step 4: Save merged buffer
     settings.writeBuffer("world", Buffer.fromArray(all))
+    updatePlayerDataSaved()
+
+    
+    saveBiomes()
+
+}
+
+function updatePlayerDataSaved() {
+    settings.writeNumber("pcx", chunkX)
+    settings.writeNumber("pcy", chunkY)
+    settings.writeNumber("px", myPlayer.x)
+    settings.writeNumber("py", myPlayer.y)
 }
 
 let chunkcount = 0
 
 function loadWorld() {
     let buf = settings.readBuffer("world")
-    if (!buf) return
+    if (!buf) {
+        console.log("NO WORLD SAVED SKIPPING LOADING")
+        return
+    }
 
     let chunkCount = buf.getUint8(0)
         | (buf.getUint8(1) << 8)
@@ -289,20 +335,71 @@ function loadWorld() {
         offset += length
     }
 
+    if (settings.exists("pcx")) {
+        chunkX = settings.readNumber("pcx")
+        chunkY = settings.readNumber("pcy")
+        myPlayer.x = settings.readNumber("px")
+        myPlayer.y = settings.readNumber("py")
+    }
+
+
+    loadBiomeTable()
 }
 
-function loadChunkFromWorld(x: number, y: number): number[][] {
-    let entry = indexTable[`${x}:${y}`]
+function loadBiomeTable() {
+    let buf = settings.readBuffer("biomes")
+    if (!buf) {
+        biomeTable = {}
+        return
+    }
+
+    let count = buf.getUint8(0)
+        | (buf.getUint8(1) << 8)
+        | (buf.getUint8(2) << 16)
+
+    biomeTable = {}
+
+    let offset = 3
+    for (let i = 0; i < count; i++) {
+        let x = buf.getUint8(offset) | (buf.getUint8(offset + 1) << 8)
+        let y = buf.getUint8(offset + 2) | (buf.getUint8(offset + 3) << 8)
+        let biome = buf.getUint8(offset + 4)
+        offset += 5
+
+        biomeTable[`${x}:${y}`] = { biome }
+    }
+}
+
+function loadChunkFromWorld(x: number, y: number): { data: number[][], biome: number } {
+    let key = `${x}:${y}`
+    let entry = indexTable[key]
     if (!entry) return null
 
-    // Read world buffer fresh (no global worldData)
     let buf = settings.readBuffer("world")
     if (!buf) return null
 
-    // Slice compressed data using offset+length from indexTable
-    let comp = buf.slice(entry.offset, entry.length)
+    // IMPORTANT: make slice unambiguous
+    let comp = buf.slice(entry.offset, entry.offset + entry.length)
+    if (!comp || comp.length === 0) {
+        console.log("empty/invalid comp for " + key)
+
+
+        return null
+    }
+
     let decompressed = decompressBuffer(comp)
-    return bufferToChunk(decompressed)
+    if (!decompressed || decompressed.length < 64) {
+        console.log(`bad decompressed length ${decompressed.length} for ${key}`)
+        return null
+    }
+
+    let biomeEntry = biomeTable[key]
+    let biome = biomeEntry ? biomeEntry.biome : 0
+
+    return {
+        data: bufferToChunk(decompressed),
+        biome: biome
+    }
 }
 
 function indexTableSize(buf: Buffer): number {
@@ -316,31 +413,122 @@ function indexTableSize(buf: Buffer): number {
 let chunkX = 0
 let chunkY = 0
 
-function generateChunk(): number[][] {
+enum Biome {
+    Grassland = 1,
+    Forest = 2,
+    DenseGrass = 3,
+    Rocky = 4,
+    Swamp = 5,
+    Desert = 6
+}
+
+const biomeTileRules: { [key: number]: { grass: number, dark: number, rocks: number, tree: number } } = {
+    [Biome.Grassland]: { grass: 60, dark: 20, rocks: 10, tree: 10 },
+    [Biome.Forest]: { grass: 10, dark: 20, rocks: 5, tree: 65 },
+    [Biome.DenseGrass]: { grass: 50, dark: 25, rocks: 5, tree: 20 },
+    [Biome.Rocky]: { grass: 10, dark: 10, rocks: 70, tree: 10 },
+    [Biome.Swamp]: { grass: 20, dark: 40, rocks: 5, tree: 35 },
+    [Biome.Desert]: { grass: 5, dark: 5, rocks: 80, tree: 10 }
+}
+
+function chooseBiome(x: number, y: number): number {
+    let neighbors = []
+    let keys = [
+        `${x - 1}:${y}`,
+        `${x + 1}:${y}`,
+        `${x}:${y - 1}`,
+        `${x}:${y + 1}`
+    ]
+
+    for (let k of keys) {
+        if (biomeTable[k]) neighbors.push(biomeTable[k].biome)
+    }
+
+    // No neighbors → random biome
+    if (neighbors.length == 0) {
+        return randint(1, 6) // number of biomes
+    }
+
+    // Count frequencies
+    let counts: { [key: number]: number } = {}
+    for (let b of neighbors) {
+        counts[b] = (counts[b] || 0) + 1
+    }
+
+    // Find most common biome
+    let bestBiome = neighbors[0]
+    let bestCount = 0
+    for (let b of Object.keys(counts)) {
+        let biome = parseInt(b)
+        if (counts[biome] > bestCount) {
+            bestCount = counts[biome]
+            bestBiome = biome
+        }
+    }
+
+    // 70% chance to match neighbors
+    if (Math.percentChance(70)) {
+        return bestBiome
+    }
+
+    // 20% chance to pick a neighbor biome randomly
+    if (Math.percentChance(20)) {
+        return neighbors[randint(0, neighbors.length - 1)]
+    }
+
+    // 10% chance to pick a transition biome
+    return Biome.DenseGrass
+}
+
+// --- Final generateChunk() ---
+function generateChunk(): { data: number[][], biome: number } {
+    let biome = chooseBiome(chunkX, chunkY)
+    let rules = biomeTileRules[biome]
+
     let map: number[][] = []
+
     for (let i = 0; i < 8; i++) {
         let row: number[] = []
         for (let j = 0; j < 8; j++) {
-            row.push(Math.percentChance(20) ? 1 : Math.percentChance(3) ? 2 : 0)
+            let r = randint(1, 100)
+            let tile = 0
+
+            if (r <= rules.grass) tile = 0
+            else if (r <= rules.grass + rules.dark) tile = 1
+            else if (r <= rules.grass + rules.dark + rules.rocks) tile = 2
+            else tile = 3
+
+            row.push(tile)
         }
         map.push(row)
     }
-    return map
+
+    return { data: map, biome }
 }
 
 
-function getOrGenerateChunk(x: number, y: number): number[][] {
-    if (chunks[`${x}:${y}`]) return chunks[`${x}:${y}`]
 
+
+function getOrGenerateChunk(x: number, y: number): { data: number[][], biome: number } {
+    let key = `${x}:${y}`
+
+    // If chunk already exists, return it properly
+    if (chunks[key]) {
+        return chunks[key]
+    }
+
+    // Try loading from world
     let loaded = loadChunkFromWorld(x, y)
     if (loaded) {
-        chunks[`${x}:${y}`] = loaded
+        chunks[key] = loaded
         chunksLoaded++
         return loaded
     }
 
+    // Otherwise generate new
     let generated = generateChunk()
-    chunks[`${x}:${y}`] = generated
+    chunks[key] = generated
+    biomeTable[key] = { biome: generated.biome }
     saveWorld()
     return generated
 }
@@ -357,13 +545,15 @@ function reloadMap() {
     let map = getOrGenerateChunk(chunkX, chunkY)
     for (let i = 0; i < 8; i++) {
         for (let j = 0; j < 8; j++) {
-            let block = map[i][j]
+            let block = map.data[i][j]
             if (block == 0) {
                 tiles.setTileAt(tiles.getTileLocation(i, j), assets.tile`Grass`)
             } else if (block == 1) {
                 tiles.setTileAt(tiles.getTileLocation(i, j), assets.tile`dark-grass`)
-            } else {
+            } else if (block == 2) {
                 tiles.setTileAt(tiles.getTileLocation(i, j), assets.tile`rocks`)
+            } else if (block == 3) {
+                tiles.setTileAt(tiles.getTileLocation(i, j), assets.tile`tree`)
             }
         }
     }
@@ -382,18 +572,22 @@ game.onUpdate(function () {
         myPlayer.right = chunkWidthPixels - 10
         chunkX--
         reloadMap()
+        updatePlayerDataSaved()
     } else if (myPlayer.right > chunkWidthPixels - 5) {
         myPlayer.left = 10
         chunkX++
         reloadMap()
+        updatePlayerDataSaved()
     } else if (myPlayer.top < 5) {
         myPlayer.bottom = chunkHeightPixels - 10
         chunkY--
         reloadMap()
+        updatePlayerDataSaved()
     } else if (myPlayer.bottom > chunkHeightPixels - 10) {
         myPlayer.top = 10
         chunkY++
         reloadMap()
+        updatePlayerDataSaved()
     }
 
     if (chunksLoaded > 5) {
@@ -405,7 +599,7 @@ game.onUpdate(function () {
 // --- HUD ---
 game.onShade(function () {
     screen.fillRect(0, 0, 100, 10, 1)
-    screen.print(`Position ${chunkX},${chunkY}`, 1, 1, 15)
+    screen.print(`Position ${(chunkX * 8) + Math.round(myPlayer.x / 16)},${(chunkY * 8) + Math.round(myPlayer.y / 16)}`, 1, 1, 15)
 })
 
 console.log(`world is ${(settings.readBuffer("world").length) / 1024} kilobytes for ${chunkcount} chunks`)
