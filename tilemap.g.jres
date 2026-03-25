@@ -76,20 +76,29 @@
         "tilemapTile": true,
         "displayName": "snow-rocks"
     },
-    "level1": {
-        "id": "level1",
-        "mimeType": "application/mkcd-tilemap",
-        "data": "MTAwODAwMDgwMDAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMA==",
-        "tileset": [
-            "myTiles.transparency16",
-            "sprites.castle.tileGrass2",
-            "myTiles.tile4"
-        ],
-        "displayName": "blank"
-    },
-    "*": {
+
+    "tile13": {
+        "data": "hwQQABAAAADu7u6OiO7u7s7u7I5n6O7s7u7u7niH7u6OiIiIaHeIiI53hoiIdndm7mh3d2dmhojujoh2d3d3Zs7ujohohoho7o6Idnd3ZmbuiHd3ZmZmZoh3d4Zod4eIiIiIiHdniIju7u5oZ4hmZuzsiHiGeGdm7u5oiIh3iIju7o5meIfo7A==",
         "mimeType": "image/x-mkcd-f4",
-        "dataEncoding": "base64",
-        "namespace": "myTiles"
-    }
+        "tilemapTile": true,
+        "displayName": "mud-grass"
+    },
+    "tile14": {
+        "data": "hwQQABAAAADu7u7O7L7r7s7r7rvM27vuu+y+3cvbze7d7L7dy77N7tvrvt27vsvuvu7L27vuvO7uvt3M7O7uu+6+3cvs7r697su7y7zr272+zLzMzuzbzbu9zO67zNvL293Lvr3Lu8zbvcu+3cu7vNu9y77du8vrvrvs7rvru+7u7u7uvu7u7g==",
+        "mimeType": "image/x-mkcd-f4",
+        "tilemapTile": true,
+        "displayName": "mud-rocks"
+    },
+    "tile15": {
+        "data": "hwQQABAAAADu7u7M7u7u7u7ubsfM7O7u7u5sx3zs7u7ubmxnd+zu7s7Mx2ZmzO7rzsZnbGZ3tuvOfHfHdse/7mxVd2xm9ru7XFV3Zmb/u7vOfHVnd8e77m7HZ2Z3d7zrbmbHd2fM7uvubsx3d+zu7u7uZmd87O7u7u5uZ8bs7u7u7u5m7u7u7g==",
+        "mimeType": "image/x-mkcd-f4",
+        "tilemapTile": true,
+        "displayName": "mud-tree"
+    },
+    "tile16": {
+        "data": "hwQQABAAAADd3d3M3d3d3d3dbcfM3N3d3d1sx3zc3d3dbWxnd9zd3c3Mx2ZmzN3ezcZnbGZ35t7NfHfHdsfv3WxVd2xm9u7uXFV3Zmb/7u7NfHVnd8fu3W3HZ2Z3d+zebWbHd2fM3d7dbcx3d9zd3d3dZmd83N3d3d1tZ8bc3d3d3d1m3d3d3Q==",
+        "mimeType": "image/x-mkcd-f4",
+        "tilemapTile": true,
+        "displayName": "sand-tree"
+    },
 }
