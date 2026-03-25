@@ -13,7 +13,7 @@ namespace worldtransfer {
     const MAX_PAYLOAD = MAX_PACKET - HEADER_SIZE - CHECKSUM_SIZE;
 
     // Reliability
-    const SEND_DELAY_US = 10000;
+    const SEND_DELAY_US = 4000;
     const ACK_TIMEOUT_MS = 300;   // increased for radio stability
     const MAX_RETRIES = 4;
     const REDUNDANT_SENDS = 2;
@@ -109,7 +109,6 @@ namespace worldtransfer {
     }
 
     export function startConnection(ip: string): boolean {
-        console.log("Starting Connection to IP:" + ip)
         sendWithRedundancy(ip, makeStartPacket(0, 0));
         return true;
     }
@@ -159,7 +158,7 @@ namespace worldtransfer {
                 attempts++;
                 sendWithRedundancy(ip, pkt);
                 acked = waitForAck(ip, i);
-                if (!acked) control.waitMicros(30000);
+                if (!acked) control.waitMicros(8000);
             }
         }
     }
@@ -170,11 +169,8 @@ namespace worldtransfer {
 
     export function sendWorld(ip: string, world: Buffer) {
         if (!startConnection(ip)) return;
-        console.log("Transferring " + world.length + " Bytes To " + ip)
         transferData(ip, world);
-        console.log("Tranfer Complete.")
         endConnection(ip);
-        console.log("Connection Ended.")
     }
 
     // -------------------------------------------------------------
@@ -203,18 +199,19 @@ namespace worldtransfer {
 
     const sessions: { [ip: string]: RxSession } = {};
 
-    function listen(ip:string,onComplete:(ip:string,data:Buffer) => void) {
-        NetWorking.WaitForData(ip).then((str: string) => {
-            if (str) processPacket(ip, str, onComplete);
-        });
-    }
-
     // -------------------------------------------------------------
     // Persistent receiver
     // -------------------------------------------------------------
     export function initReceiver(ip: string, onComplete: (ip: string, data: Buffer) => void) {
-        console.log("Initalizing Reciver With IP:" + ip)
-        listen(ip,onComplete);
+
+        function listen() {
+            NetWorking.WaitForData(ip).then((str: string) => {
+                if (str) processPacket(ip, str, onComplete);
+                listen(); // keep listening forever
+            });
+        }
+
+        listen();
     }
 
     function processPacket(ip: string, str: string, onComplete: (ip: string, data: Buffer) => void) {
