@@ -76,6 +76,7 @@
         "tilemapTile": true,
         "displayName": "snow-rocks"
     },
+
     "tile13": {
         "data": "hwQQABAAAADu7u6OiO7u7s7u7I5n6O7s7u7u7niH7u6OiIiIaHeIiI53hoiIdndm7mh3d2dmhojujoh2d3d3Zs7ujohohoho7o6Idnd3ZmbuiHd3ZmZmZoh3d4Zod4eIiIiIiHdniIju7u5oZ4hmZuzsiHiGeGdm7u5oiIh3iIju7o5meIfo7A==",
         "mimeType": "image/x-mkcd-f4",
@@ -100,20 +101,4 @@
         "tilemapTile": true,
         "displayName": "sand-tree"
     },
-    "level1": {
-        "id": "level1",
-        "mimeType": "application/mkcd-tilemap",
-        "data": "MTAwODAwMDgwMDAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMA==",
-        "tileset": [
-            "myTiles.transparency16",
-            "sprites.castle.tileGrass2",
-            "myTiles.tile4"
-        ],
-        "displayName": "blank"
-    },
-    "*": {
-        "mimeType": "image/x-mkcd-f4",
-        "dataEncoding": "base64",
-        "namespace": "myTiles"
-    }
 }

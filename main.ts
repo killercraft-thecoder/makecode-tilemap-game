@@ -538,6 +538,7 @@ function chooseBiome(x: number, y: number): number {
     // No neighbors → random biome
     if (neighbors.length == 0) {
         return randint(1, BIOME_COUNT) // number of biomes
+
     }
 
     // Count frequencies
