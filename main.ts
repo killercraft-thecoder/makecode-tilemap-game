@@ -117,7 +117,7 @@ function genChunksInRadius() {
     let cur = 0
     for (let i = -5; i < 5; i++) {
         for (let j = -5; j < 5; j++) {
-            getOrGenerateChunk(i,j)
+            getOrGenerateChunk(i, j)
             cur++
             statusbar.value = cur
             statusbar.setLabel(`Chunk ${cur}/100`)
@@ -295,7 +295,7 @@ function saveWorld() {
     settings.writeBuffer("world", Buffer.fromArray(all))
     updatePlayerDataSaved()
 
-    
+
     saveBiomes()
 
 }
@@ -419,18 +419,32 @@ enum Biome {
     DenseGrass = 3,
     Rocky = 4,
     Swamp = 5,
-    Desert = 6
+    Desert = 6,
+    Snow = 7,
+    Tundra = 8
 }
 
 const biomeSlotWeights: { [key: number]: { slot0: number, slot1: number, slot2: number, slot3: number } } = {
     [Biome.Grassland]: { slot0: 60, slot1: 20, slot2: 10, slot3: 10 },
-    [Biome.Forest]: { slot0: 10, slot1: 20, slot2: 5, slot3: 65 },
+    [Biome.Forest]: { slot0: 30, slot1: 30, slot2: 10, slot3: 30 },
     [Biome.DenseGrass]: { slot0: 50, slot1: 25, slot2: 5, slot3: 20 },
     [Biome.Rocky]: { slot0: 10, slot1: 10, slot2: 70, slot3: 10 },
     [Biome.Swamp]: { slot0: 20, slot1: 40, slot2: 5, slot3: 35 },
-    [Biome.Desert]: { slot0: 60, slot1: 25, slot2: 10, slot3: 5 }
+    [Biome.Desert]: { slot0: 60, slot1: 25, slot2: 10, slot3: 5 },
+    [Biome.Snow]: {
+        slot0: 60,  // snow
+        slot1: 25,  // snow
+        slot2: 10,  // ice
+        slot3: 5    // rocks
+    },
+    [Biome.Tundra]: {
+        slot0: 50,  // snow
+        slot1: 30,  // dark grass
+        slot2: 15,  // rocks
+        slot3: 5    // ice
+    },
 }
-
+/*
 const sharedTiles = {
     grass: assets.tile`Grass`,
     darkGrass: assets.tile`dark-grass`,
@@ -446,8 +460,9 @@ const biomeUniqueTiles = {
     snow: assets.tile`snow`,
     ice: assets.tile`ice`
 }
+*/
 
-const biomeTilePalette:{[index:number]:Image[]} = {
+const biomeTilePalette: { [index: number]: Image[] } = {
     [Biome.Grassland]: [
         assets.tile`Grass`,
         assets.tile`dark-grass`,
@@ -478,21 +493,36 @@ const biomeTilePalette:{[index:number]:Image[]} = {
 
     [Biome.Swamp]: [
         assets.tile`mud`,
-        assets.tile`dark-grass`,
-        assets.tile`rocks`,
-        assets.tile`tree`
+        assets.tile`mud-grass`,
+        assets.tile`mud-rocks`,
+        assets.tile`mud-tree`
     ],
 
     [Biome.Desert]: [
         assets.tile`sand`,
         assets.tile`sand`,
         assets.tile`cactus`,
-        assets.tile`rocks`
+        assets.tile`desert-rocks`
+    ],
+
+    [Biome.Snow]: [
+        assets.tile`snow`,   // slot0
+        assets.tile`snow`,   // slot1
+        assets.tile`ice`,    // slot2
+        assets.tile`snow-rocks`   // slot3
+    ],
+    [Biome.Tundra]: [
+        assets.tile`snow`,       // slot0
+        assets.tile`snow-grass`, // slot1
+        assets.tile`snow-rocks`,      // slot2
+        assets.tile`ice`         // slot3
     ]
 }
 
+const BIOME_COUNT = 8
+
 function chooseBiome(x: number, y: number): number {
-    
+
     let neighbors = []
     let keys = [
         `${x - 1}:${y}`,
@@ -507,7 +537,7 @@ function chooseBiome(x: number, y: number): number {
 
     // No neighbors → random biome
     if (neighbors.length == 0) {
-        return randint(1, 6) // number of biomes
+        return randint(1, BIOME_COUNT) // number of biomes
     }
 
     // Count frequencies
@@ -527,18 +557,18 @@ function chooseBiome(x: number, y: number): number {
         }
     }
 
-    // 70% chance to match neighbors
-    if (Math.percentChance(70)) {
+    // 60% chance to match neighbors
+    if (Math.percentChance(60)) {
         return bestBiome
     }
 
-    // 20% chance to pick a neighbor biome randomly
-    if (Math.percentChance(20)) {
+    // 30% chance to pick a neighbor biome randomly
+    if (Math.percentChance(30)) {
         return neighbors[randint(0, neighbors.length - 1)]
     }
 
-    // 10% chance to pick a transition biome
-    return Biome.DenseGrass
+    // 10% chance to pick a random biome
+    return randint(1,BIOME_COUNT)
 }
 
 // --- Final generateChunk() ---
@@ -611,6 +641,286 @@ const chunkHeightPixels = 16 * 8
 let myPlayer = sprites.create(assets.image`myPlayer`)
 myPlayer.setFlag(SpriteFlag.StayInScreen, true)
 controller.moveSprite(myPlayer, 100, 100)
+
+characterAnimations.loopFrames(myPlayer, [img`
+    . . . . . . . . . . . . . . . .
+    . . . . f f f f f f . . . . . .
+    . . . f 2 f e e e e f f . . . .
+    . . f 2 2 2 f e e e e f f . . .
+    . . f e e e e f f e e e f . . .
+    . f e 2 2 2 2 e e f f f f . . .
+    . f 2 e f f f f 2 2 2 e f . . .
+    . f f f e e e f f f f f f f . .
+    . f e e 4 4 f b e 4 4 e f f . .
+    . . f e d d f 1 4 d 4 e e f . .
+    . . . f d d d d 4 e e e f . . .
+    . . . f e 4 4 4 e d d 4 . . . .
+    . . . f 2 2 2 2 e d d e . . . .
+    . . f f 5 5 4 4 f e e f . . . .
+    . . f f f f f f f f f f . . . .
+    . . . f f f . . . f f . . . . .
+`,img`
+    . . . . f f f f f f . . . . . .
+    . . . f 2 f e e e e f f . . . .
+    . . f 2 2 2 f e e e e f f . . .
+    . . f e e e e f f e e e f . . .
+    . f e 2 2 2 2 e e f f f f . . .
+    . f 2 e f f f f 2 2 2 e f . . .
+    . f f f e e e f f f f f f f . .
+    . f e e 4 4 f b e 4 4 e f f . .
+    . . f e d d f 1 4 d 4 e e f . .
+    . . . f d d d d 4 e e e f . . .
+    . . . f e 4 4 4 e e f f . . . .
+    . . . f 2 2 2 e d d 4 . . . . .
+    . . . f 2 2 2 e d d e . . . . .
+    . . . f 5 5 4 f e e f . . . . .
+    . . . . f f f f f f . . . . . .
+    . . . . . . f f f . . . . . . .
+`,img`
+    . . . . . . . . . . . . . . . .
+    . . . . f f f f f f . . . . . .
+    . . . f 2 f e e e e f f . . . .
+    . . f 2 2 2 f e e e e f f . . .
+    . . f e e e e f f e e e f . . .
+    . f e 2 2 2 2 e e f f f f . . .
+    . f 2 e f f f f 2 2 2 e f . . .
+    . f f f e e e f f f f f f f . .
+    . f e e 4 4 f b e 4 4 e f f . .
+    . . f e d d f 1 4 d 4 e e f . .
+    . . . f d d d e e e e e f . . .
+    . . . f e 4 e d d 4 f . . . . .
+    . . . f 2 2 e d d e f . . . . .
+    . . f f 5 5 f e e f f f . . . .
+    . . f f f f f f f f f f . . . .
+    . . . f f f . . . f f . . . . .
+`,img`
+    . . . . f f f f f f . . . . . .
+    . . . f 2 f e e e e f f . . . .
+    . . f 2 2 2 f e e e e f f . . .
+    . . f e e e e f f e e e f . . .
+    . f e 2 2 2 2 e e f f f f . . .
+    . f 2 e f f f f 2 2 2 e f . . .
+    . f f f e e e f f f f f f f . .
+    . f e e 4 4 f b e 4 4 e f f . .
+    . . f e d d f 1 4 d 4 e e f . .
+    . . . f d d d d 4 e e e f . . .
+    . . . f e 4 4 4 e e f f . . . .
+    . . . f 2 2 2 e d d 4 . . . . .
+    . . . f 2 2 2 e d d e . . . . .
+    . . . f 5 5 4 f e e f . . . . .
+    . . . . f f f f f f . . . . . .
+    . . . . . . f f f . . . . . . .
+`], 100, characterAnimations.rule(Predicate.MovingLeft))
+
+characterAnimations.loopFrames(myPlayer, [img`
+    . . . . . . . . . . . . . . . .
+    . . . . . . f f f f f f . . . .
+    . . . . f f e e e e f 2 f . . .
+    . . . f f e e e e f 2 2 2 f . .
+    . . . f e e e f f e e e e f . .
+    . . . f f f f e e 2 2 2 2 e f .
+    . . . f e 2 2 2 f f f f e 2 f .
+    . . f f f f f f f e e e f f f .
+    . . f f e 4 4 e b f 4 4 e e f .
+    . . f e e 4 d 4 1 f d d e f . .
+    . . . f e e e 4 d d d d f . . .
+    . . . . 4 d d e 4 4 4 e f . . .
+    . . . . e d d e 2 2 2 2 f . . .
+    . . . . f e e f 4 4 5 5 f f . .
+    . . . . f f f f f f f f f f . .
+    . . . . . f f . . . f f f . . .
+`, img`
+    . . . . . . f f f f f f . . . .
+    . . . . f f e e e e f 2 f . . .
+    . . . f f e e e e f 2 2 2 f . .
+    . . . f e e e f f e e e e f . .
+    . . . f f f f e e 2 2 2 2 e f .
+    . . . f e 2 2 2 f f f f e 2 f .
+    . . f f f f f f f e e e f f f .
+    . . f f e 4 4 e b f 4 4 e e f .
+    . . f e e 4 d 4 1 f d d e f . .
+    . . . f e e e 4 d d d d f . . .
+    . . . . f f e e 4 4 4 e f . . .
+    . . . . . 4 d d e 2 2 2 f . . .
+    . . . . . e d d e 2 2 2 f . . .
+    . . . . . f e e f 4 5 5 f . . .
+    . . . . . . f f f f f f . . . .
+    . . . . . . . f f f . . . . . .
+`, img`
+    . . . . . . . . . . . . . . . .
+    . . . . . . f f f f f f . . . .
+    . . . . f f e e e e f 2 f . . .
+    . . . f f e e e e f 2 2 2 f . .
+    . . . f e e e f f e e e e f . .
+    . . . f f f f e e 2 2 2 2 e f .
+    . . . f e 2 2 2 f f f f e 2 f .
+    . . f f f f f f f e e e f f f .
+    . . f f e 4 4 e b f 4 4 e e f .
+    . . f e e 4 d 4 1 f d d e f . .
+    . . . f e e e e e d d d f . . .
+    . . . . . f 4 d d e 4 e f . . .
+    . . . . . f e d d e 2 2 f . . .
+    . . . . f f f e e f 5 5 f f . .
+    . . . . f f f f f f f f f f . .
+    . . . . . f f . . . f f f . . .
+`, img`
+    . . . . . . f f f f f f . . . .
+    . . . . f f e e e e f 2 f . . .
+    . . . f f e e e e f 2 2 2 f . .
+    . . . f e e e f f e e e e f . .
+    . . . f f f f e e 2 2 2 2 e f .
+    . . . f e 2 2 2 f f f f e 2 f .
+    . . f f f f f f f e e e f f f .
+    . . f f e 4 4 e b f 4 4 e e f .
+    . . f e e 4 d 4 1 f d d e f . .
+    . . . f e e e 4 d d d d f . . .
+    . . . . f f e e 4 4 4 e f . . .
+    . . . . . 4 d d e 2 2 2 f . . .
+    . . . . . e d d e 2 2 2 f . . .
+    . . . . . f e e f 4 5 5 f . . .
+    . . . . . . f f f f f f . . . .
+    . . . . . . . f f f . . . . . .
+`], 100, characterAnimations.rule(Predicate.MovingRight))
+
+characterAnimations.loopFrames(myPlayer, [img`
+    . . . . . . f f f f . . . . . .
+    . . . . f f e e e e f f . . . .
+    . . . f e e e f f e e e f . . .
+    . . f f f f f 2 2 f f f f f . .
+    . . f f e 2 e 2 2 e 2 e f f . .
+    . . f e 2 f 2 f f 2 f 2 e f . .
+    . . f f f 2 2 e e 2 2 f f f . .
+    . f f e f 2 f e e f 2 f e f f .
+    . f e e f f e e e e f e e e f .
+    . . f e e e e e e e e e e f . .
+    . . . f e e e e e e e e f . . .
+    . . e 4 f f f f f f f f 4 e . .
+    . . 4 d f 2 2 2 2 2 2 f d 4 . .
+    . . 4 4 f 4 4 4 4 4 4 f 4 4 . .
+    . . . . . f f f f f f . . . . .
+    . . . . . f f . . f f . . . . .
+`,img`
+    . . . . . . . . . . . . . . . .
+    . . . . . . f f f f . . . . . .
+    . . . . f f e e e e f f . . . .
+    . . . f e e e f f e e e f . . .
+    . . . f f f f 2 2 f f f f . . .
+    . . f f e 2 e 2 2 e 2 e f f . .
+    . . f e 2 f 2 f f f 2 f e f . .
+    . . f f f 2 f e e 2 2 f f f . .
+    . . f e 2 f f e e 2 f e e f . .
+    . f f e f f e e e f e e e f f .
+    . f f e e e e e e e e e e f f .
+    . . . f e e e e e e e e f . . .
+    . . . e f f f f f f f f 4 e . .
+    . . . 4 f 2 2 2 2 2 e d d 4 . .
+    . . . e f f f f f f e e 4 . . .
+    . . . . f f f . . . . . . . . .
+`,img`
+    . . . . . . f f f f . . . . . .
+    . . . . f f e e e e f f . . . .
+    . . . f e e e f f e e e f . . .
+    . . f f f f f 2 2 f f f f f . .
+    . . f f e 2 e 2 2 e 2 e f f . .
+    . . f e 2 f 2 f f 2 f 2 e f . .
+    . . f f f 2 2 e e 2 2 f f f . .
+    . f f e f 2 f e e f 2 f e f f .
+    . f e e f f e e e e f e e e f .
+    . . f e e e e e e e e e e f . .
+    . . . f e e e e e e e e f . . .
+    . . e 4 f f f f f f f f 4 e . .
+    . . 4 d f 2 2 2 2 2 2 f d 4 . .
+    . . 4 4 f 4 4 4 4 4 4 f 4 4 . .
+    . . . . . f f f f f f . . . . .
+    . . . . . f f . . f f . . . . .
+`,img`
+    . . . . . . . . . . . . . . . .
+    . . . . . . f f f f . . . . . .
+    . . . . f f e e e e f f . . . .
+    . . . f e e e f f e e e f . . .
+    . . . f f f f 2 2 f f f f . . .
+    . . f f e 2 e 2 2 e 2 e f f . .
+    . . f e f 2 f f f 2 f 2 e f . .
+    . . f f f 2 2 e e f 2 f f f . .
+    . . f e e f 2 e e f f 2 e f . .
+    . f f e e e f e e e f f e f f .
+    . f f e e e e e e e e e e f f .
+    . . . f e e e e e e e e f . . .
+    . . e 4 f f f f f f f f e . . .
+    . . 4 d d e 2 2 2 2 2 f 4 . . .
+    . . . 4 e e f f f f f f e . . .
+    . . . . . . . . . f f f . . . .
+`], 100, characterAnimations.rule(Predicate.MovingUp))
+
+characterAnimations.loopFrames(myPlayer, [img`
+    . . . . . . f f f f . . . . . .
+    . . . . f f f 2 2 f f f . . . .
+    . . . f f f 2 2 2 2 f f f . . .
+    . . f f f e e e e e e f f f . .
+    . . f f e 2 2 2 2 2 2 e e f . .
+    . . f e 2 f f f f f f 2 e f . .
+    . . f f f f e e e e f f f f . .
+    . f f e f b f 4 4 f b f e f f .
+    . f e e 4 1 f d d f 1 4 e e f .
+    . . f e e d d d d d d e e f . .
+    . . . f e e 4 4 4 4 e e f . . .
+    . . e 4 f 2 2 2 2 2 2 f 4 e . .
+    . . 4 d f 2 2 2 2 2 2 f d 4 . .
+    . . 4 4 f 4 4 5 5 4 4 f 4 4 . .
+    . . . . . f f f f f f . . . . .
+    . . . . . f f . . f f . . . . .
+`,img`
+    . . . . . . . . . . . . . . . .
+    . . . . . . f f f f . . . . . .
+    . . . . f f f 2 2 f f f . . . .
+    . . . f f f 2 2 2 2 f f f . . .
+    . . f f f e e e e e e f f f . .
+    . . f f e 2 2 2 2 2 2 e e f . .
+    . f f e 2 f f f f f f 2 e f f .
+    . f f f f f e e e e f f f f f .
+    . . f e f b f 4 4 f b f e f . .
+    . . f e 4 1 f d d f 1 4 e f . .
+    . . . f e 4 d d d d 4 e f e . .
+    . . f e f 2 2 2 2 e d d 4 e . .
+    . . e 4 f 2 2 2 2 e d d e . . .
+    . . . . f 4 4 5 5 f e e . . . .
+    . . . . f f f f f f f . . . . .
+    . . . . f f f . . . . . . . . .
+`,img`
+    . . . . . . f f f f . . . . . .
+    . . . . f f f 2 2 f f f . . . .
+    . . . f f f 2 2 2 2 f f f . . .
+    . . f f f e e e e e e f f f . .
+    . . f f e 2 2 2 2 2 2 e e f . .
+    . . f e 2 f f f f f f 2 e f . .
+    . . f f f f e e e e f f f f . .
+    . f f e f b f 4 4 f b f e f f .
+    . f e e 4 1 f d d f 1 4 e e f .
+    . . f e e d d d d d d e e f . .
+    . . . f e e 4 4 4 4 e e f . . .
+    . . e 4 f 2 2 2 2 2 2 f 4 e . .
+    . . 4 d f 2 2 2 2 2 2 f d 4 . .
+    . . 4 4 f 4 4 5 5 4 4 f 4 4 . .
+    . . . . . f f f f f f . . . . .
+    . . . . . f f . . f f . . . . .
+`,img`
+    . . . . . . . . . . . . . . . .
+    . . . . . . f f f f . . . . . .
+    . . . . f f f 2 2 f f f . . . .
+    . . . f f f 2 2 2 2 f f f . . .
+    . . f f f e e e e e e f f f . .
+    . . f e e 2 2 2 2 2 2 e f f . .
+    . f f e 2 f f f f f f 2 e f f .
+    . f f f f f e e e e f f f f f .
+    . . f e f b f 4 4 f b f e f . .
+    . . f e 4 1 f d d f 1 4 e f . .
+    . . e f e 4 d d d d 4 e f . . .
+    . . e 4 d d e 2 2 2 2 f e f . .
+    . . . e d d e 2 2 2 2 f 4 e . .
+    . . . . e e f 5 5 4 4 f . . . .
+    . . . . . f f f f f f f . . . .
+    . . . . . . . . . f f f . . . .
+`], 100, characterAnimations.rule(Predicate.MovingDown))
 
 function reloadMap() {
     let chunk = getOrGenerateChunk(chunkX, chunkY)
