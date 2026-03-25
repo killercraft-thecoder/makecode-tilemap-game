@@ -117,7 +117,7 @@ function genChunksInRadius() {
     let cur = 0
     for (let i = -5; i < 5; i++) {
         for (let j = -5; j < 5; j++) {
-            getOrGenerateChunk(i,j)
+            getOrGenerateChunk(i, j)
             cur++
             statusbar.value = cur
             statusbar.setLabel(`Chunk ${cur}/100`)
@@ -295,7 +295,7 @@ function saveWorld() {
     settings.writeBuffer("world", Buffer.fromArray(all))
     updatePlayerDataSaved()
 
-    
+
     saveBiomes()
 
 }
@@ -419,16 +419,30 @@ enum Biome {
     DenseGrass = 3,
     Rocky = 4,
     Swamp = 5,
-    Desert = 6
+    Desert = 6,
+    Snow = 7,
+    Tundra = 8
 }
 
 const biomeSlotWeights: { [key: number]: { slot0: number, slot1: number, slot2: number, slot3: number } } = {
     [Biome.Grassland]: { slot0: 60, slot1: 20, slot2: 10, slot3: 10 },
-    [Biome.Forest]: { slot0: 10, slot1: 20, slot2: 5, slot3: 65 },
+    [Biome.Forest]: { slot0: 30, slot1: 30, slot2: 10, slot3: 30 },
     [Biome.DenseGrass]: { slot0: 50, slot1: 25, slot2: 5, slot3: 20 },
     [Biome.Rocky]: { slot0: 10, slot1: 10, slot2: 70, slot3: 10 },
     [Biome.Swamp]: { slot0: 20, slot1: 40, slot2: 5, slot3: 35 },
-    [Biome.Desert]: { slot0: 60, slot1: 25, slot2: 10, slot3: 5 }
+    [Biome.Desert]: { slot0: 60, slot1: 25, slot2: 10, slot3: 5 },
+    [Biome.Snow]: {
+        slot0: 60,  // snow
+        slot1: 25,  // snow
+        slot2: 10,  // ice
+        slot3: 5    // rocks
+    },
+    [Biome.Tundra]: {
+        slot0: 50,  // snow
+        slot1: 30,  // dark grass
+        slot2: 15,  // rocks
+        slot3: 5    // ice
+    },
 }
 
 const sharedTiles = {
@@ -447,7 +461,7 @@ const biomeUniqueTiles = {
     ice: assets.tile`ice`
 }
 
-const biomeTilePalette:{[index:number]:Image[]} = {
+const biomeTilePalette: { [index: number]: Image[] } = {
     [Biome.Grassland]: [
         assets.tile`Grass`,
         assets.tile`dark-grass`,
@@ -487,12 +501,25 @@ const biomeTilePalette:{[index:number]:Image[]} = {
         assets.tile`sand`,
         assets.tile`sand`,
         assets.tile`cactus`,
-        assets.tile`rocks`
+        assets.tile`desert-rocks`
+    ],
+
+    [Biome.Snow]: [
+        assets.tile`snow`,   // slot0
+        assets.tile`snow`,   // slot1
+        assets.tile`ice`,    // slot2
+        assets.tile`snow-rocks`   // slot3
+    ],
+    [Biome.Tundra]: [
+        assets.tile`snow`,       // slot0
+        assets.tile`snow-grass`, // slot1
+        assets.tile`snow-rocks`,      // slot2
+        assets.tile`ice`         // slot3
     ]
 }
 
 function chooseBiome(x: number, y: number): number {
-    
+
     let neighbors = []
     let keys = [
         `${x - 1}:${y}`,
@@ -507,7 +534,7 @@ function chooseBiome(x: number, y: number): number {
 
     // No neighbors → random biome
     if (neighbors.length == 0) {
-        return randint(1, 6) // number of biomes
+        return randint(1, 8) // number of biomes
     }
 
     // Count frequencies

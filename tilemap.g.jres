@@ -10,12 +10,6 @@
         "tilemapTile": true,
         "displayName": "Grass"
     },
-    "tile3": {
-        "data": "hwQQABAAAAB3d3fHfLd7d8d7d7vM27t3u3y33cvbzXfdfLfdy7fNd9t7t927t8t3t3fL27t3vHd3t93MfHd3u3e33ct8d7e9d8u7y7x72723zLzMx3zbzbu9zHe7zNvL293Lt73Lu8zbvcu33cu7vNu9y7fdu8t7t7t8d7t7u3d3d3d3t3d3dw==",
-        "mimeType": "image/x-mkcd-f4",
-        "tilemapTile": true,
-        "displayName": "rocks"
-    },
     "tile2": {
         "data": "hwQQABAAAAB3d3eHiHd3d3d3d4dneHd3d3d3d3iHd3eHiIiIaHeIiId3hoiIdndmd2h3d2dmhoh3h4h2d3d3Znd3h4hohohod4eIdnd3ZmZ3iHd3ZmZmZoh3d4Zod4eIiIiIiHdniIh3d3doZ4hmZnd3iHiGeGdmd3doiIh3iIh3d4dmeId4dw==",
         "mimeType": "image/x-mkcd-f4",
@@ -45,6 +39,42 @@
         "mimeType": "image/x-mkcd-f4",
         "tilemapTile": true,
         "displayName": "mud"
+    },
+    "tile8": {
+        "data": "hwQQABAAAAAREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREQ==",
+        "mimeType": "image/x-mkcd-f4",
+        "tilemapTile": true,
+        "displayName": "snow"
+    },
+    "tile9": {
+        "data": "hwQQABAAAAARERFhEREREWERERERERERERERERERYRERERERERERERERERERERERERERZhERFhEREREREREWERERERYRERERERFhEWEWEWEREREREREREREWEREREREREREREREWEREREWFmERFhERERZhEREREREREREREREREREREREREREQ==",
+        "mimeType": "image/x-mkcd-f4",
+        "tilemapTile": true,
+        "displayName": "ice"
+    },
+    "tile10": {
+        "data": "hwQQABAAAADd3d3N3L3b3c3b3bvM27vdu9y93cvbzd3d3L3dy73N3dvbvd27vcvdvd3L27vdvN3dvd3M3N3du9293cvc3b293cu7y7zb2729zLzMzdzbzbu9zN27zNvL293Lvb3Lu8zbvcu93cu7vNu9y73du8vbvbvc3bvbu93d3d3dvd3d3Q==",
+        "mimeType": "image/x-mkcd-f4",
+        "tilemapTile": true,
+        "displayName": "desert-rocks"
+    },
+    "tile11": {
+        "data": "hwQQABAAAAARERGBiBEREREREYFnGBEREREREXiHERGBiIiIaHeIiIF3hoiIdndmEWh3d2dmhogRgYh2d3d3ZhERgYhohohoEYGIdnd3ZmYRiHd3ZmZmZoh3d4Zod4eIiIiIiHdniIgRERFoZ4hmZhERiHiGeGdmERFoiIh3iIgREYFmeIcYEQ==",
+        "mimeType": "image/x-mkcd-f4",
+        "tilemapTile": true,
+        "displayName": "snow-grass"
+    },
+    "tile12": {
+        "data": "hwQQABAAAAB3d3fHfLd7d8d7d7vM27t3u3y33cvbzXfdfLfdy7fNd9t7t927t8t3t3fL27t3vHd3t93MfHd3u3e33ct8d7e9d8u7y7x72723zLzMx3zbzbu9zHe7zNvL293Lt73Lu8zbvcu33cu7vNu9y7fdu8t7t7t8d7t7u3d3d3d3t3d3dw==",
+        "mimeType": "image/x-mkcd-f4",
+        "tilemapTile": true,
+        "displayName": "rocks"
+    },
+    "tile3": {
+        "data": "hwQQABAAAAARERHBHLEbEcEbEbvM27sRuxyx3cvbzRHdHLHdy7HNEdsbsd27scsRsRHL27sRvBERsd3MHBERuxGx3cscEbG9Ecu7y7wb272xzLzMwRzbzbu9zBG7zNvL293Lsb3Lu8zbvcux3cu7vNu9y7Hdu8sbsbscEbsbuxERERERsREREQ==",
+        "mimeType": "image/x-mkcd-f4",
+        "tilemapTile": true,
+        "displayName": "snow-rocks"
     },
     "level1": {
         "id": "level1",
