@@ -28,6 +28,24 @@
         "tilemapTile": true,
         "displayName": "tree"
     },
+    "tile5": {
+        "data": "hwQQABAAAADd3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3Q==",
+        "mimeType": "image/x-mkcd-f4",
+        "tilemapTile": true,
+        "displayName": "sand"
+    },
+    "tile6": {
+        "data": "hwQQABAAAADd3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d193dfXfd3d3Xd3d3d3d93dd3d3d3d33d13d3d3d3fd3Xd3d3d3d93dd3d3d3d33d193dfX193d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3Q==",
+        "mimeType": "image/x-mkcd-f4",
+        "tilemapTile": true,
+        "displayName": "cactus"
+    },
+    "tile7": {
+        "data": "hwQQABAAAADu7u7u7u7u7u7u7u7u7u7u7s7u7u7u7u7u7u7u7u7u7u7u7uzu7uzu7u7u7O7u7u7uzO7uzu7u7u7u7u7u7u7u7u7u7O7u7u7u7u7u7u7s7u7u7u7u7O7u7u7uzO7u7u7u7u7u7u7s7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7g==",
+        "mimeType": "image/x-mkcd-f4",
+        "tilemapTile": true,
+        "displayName": "mud"
+    },
     "level1": {
         "id": "level1",
         "mimeType": "application/mkcd-tilemap",

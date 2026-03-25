@@ -422,16 +422,77 @@ enum Biome {
     Desert = 6
 }
 
-const biomeTileRules: { [key: number]: { grass: number, dark: number, rocks: number, tree: number } } = {
-    [Biome.Grassland]: { grass: 60, dark: 20, rocks: 10, tree: 10 },
-    [Biome.Forest]: { grass: 10, dark: 20, rocks: 5, tree: 65 },
-    [Biome.DenseGrass]: { grass: 50, dark: 25, rocks: 5, tree: 20 },
-    [Biome.Rocky]: { grass: 10, dark: 10, rocks: 70, tree: 10 },
-    [Biome.Swamp]: { grass: 20, dark: 40, rocks: 5, tree: 35 },
-    [Biome.Desert]: { grass: 5, dark: 5, rocks: 80, tree: 10 }
+const biomeSlotWeights: { [key: number]: { slot0: number, slot1: number, slot2: number, slot3: number } } = {
+    [Biome.Grassland]: { slot0: 60, slot1: 20, slot2: 10, slot3: 10 },
+    [Biome.Forest]: { slot0: 10, slot1: 20, slot2: 5, slot3: 65 },
+    [Biome.DenseGrass]: { slot0: 50, slot1: 25, slot2: 5, slot3: 20 },
+    [Biome.Rocky]: { slot0: 10, slot1: 10, slot2: 70, slot3: 10 },
+    [Biome.Swamp]: { slot0: 20, slot1: 40, slot2: 5, slot3: 35 },
+    [Biome.Desert]: { slot0: 60, slot1: 25, slot2: 10, slot3: 5 }
+}
+
+const sharedTiles = {
+    grass: assets.tile`Grass`,
+    darkGrass: assets.tile`dark-grass`,
+    rocks: assets.tile`rocks`,
+    tree: assets.tile`tree`
+}
+
+const biomeUniqueTiles = {
+    sand: assets.tile`sand`,
+    cactus: assets.tile`cactus`,
+    mud: assets.tile`mud`,
+    swampTree: assets.tile`dead-tree`,
+    snow: assets.tile`snow`,
+    ice: assets.tile`ice`
+}
+
+const biomeTilePalette:{[index:number]:Image[]} = {
+    [Biome.Grassland]: [
+        assets.tile`Grass`,
+        assets.tile`dark-grass`,
+        assets.tile`rocks`,
+        assets.tile`tree`
+    ],
+
+    [Biome.Forest]: [
+        assets.tile`Grass`,
+        assets.tile`dark-grass`,
+        assets.tile`tree`,
+        assets.tile`tree`
+    ],
+
+    [Biome.DenseGrass]: [
+        assets.tile`Grass`,
+        assets.tile`dark-grass`,
+        assets.tile`Grass`,
+        assets.tile`tree`
+    ],
+
+    [Biome.Rocky]: [
+        assets.tile`rocks`,
+        assets.tile`rocks`,
+        assets.tile`dark-grass`,
+        assets.tile`tree`
+    ],
+
+    [Biome.Swamp]: [
+        assets.tile`mud`,
+        assets.tile`dark-grass`,
+        assets.tile`rocks`,
+        assets.tile`tree`
+    ],
+
+    [Biome.Desert]: [
+        assets.tile`sand`,
+        assets.tile`sand`,
+        assets.tile`cactus`,
+        assets.tile`rocks`
+    ]
 }
 
 function chooseBiome(x: number, y: number): number {
+    
     let neighbors = []
     let keys = [
         `${x - 1}:${y}`,
@@ -482,23 +543,33 @@ function chooseBiome(x: number, y: number): number {
 
 // --- Final generateChunk() ---
 function generateChunk(): { data: number[][], biome: number } {
+    // Pick biome using your neighbor-aware logic
     let biome = chooseBiome(chunkX, chunkY)
-    let rules = biomeTileRules[biome]
+
+    // Get the slot weights for this biome
+    let weights = biomeSlotWeights[biome]
 
     let map: number[][] = []
 
     for (let i = 0; i < 8; i++) {
         let row: number[] = []
         for (let j = 0; j < 8; j++) {
+
             let r = randint(1, 100)
-            let tile = 0
+            let tileSlot = 0
 
-            if (r <= rules.grass) tile = 0
-            else if (r <= rules.grass + rules.dark) tile = 1
-            else if (r <= rules.grass + rules.dark + rules.rocks) tile = 2
-            else tile = 3
+            // Slot selection based on weights
+            if (r <= weights.slot0) {
+                tileSlot = 0
+            } else if (r <= weights.slot0 + weights.slot1) {
+                tileSlot = 1
+            } else if (r <= weights.slot0 + weights.slot1 + weights.slot2) {
+                tileSlot = 2
+            } else {
+                tileSlot = 3
+            }
 
-            row.push(tile)
+            row.push(tileSlot)
         }
         map.push(row)
     }
@@ -542,19 +613,13 @@ myPlayer.setFlag(SpriteFlag.StayInScreen, true)
 controller.moveSprite(myPlayer, 100, 100)
 
 function reloadMap() {
-    let map = getOrGenerateChunk(chunkX, chunkY)
+    let chunk = getOrGenerateChunk(chunkX, chunkY)
+    let palette = biomeTilePalette[chunk.biome]
+
     for (let i = 0; i < 8; i++) {
         for (let j = 0; j < 8; j++) {
-            let block = map.data[i][j]
-            if (block == 0) {
-                tiles.setTileAt(tiles.getTileLocation(i, j), assets.tile`Grass`)
-            } else if (block == 1) {
-                tiles.setTileAt(tiles.getTileLocation(i, j), assets.tile`dark-grass`)
-            } else if (block == 2) {
-                tiles.setTileAt(tiles.getTileLocation(i, j), assets.tile`rocks`)
-            } else if (block == 3) {
-                tiles.setTileAt(tiles.getTileLocation(i, j), assets.tile`tree`)
-            }
+            let block = chunk.data[i][j]
+            tiles.setTileAt(tiles.getTileLocation(i, j), palette[block])
         }
     }
 }
